@@ -1,5 +1,6 @@
 import socket
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 def check_service(host,port):
     
@@ -13,7 +14,7 @@ def check_service(host,port):
                 "host":host,
                 "port":port,
                 "status":"REACHABLE",
-                "latency_ms":latency
+                "latency_ms":round(latency,2)
            }
            
     except OSError as error:
@@ -25,9 +26,62 @@ def check_service(host,port):
             "error":str(error)
         }
 
+
+#  sequential running of the services
+def sequential_run(services):
+    start = time.perf_counter()
+    results = []
+    for host,port in services:
+        result = check_service(host,port)
+        results.append(result)
+    
+    elapsed_time = time.perf_counter() - start
+    return results, elapsed_time
+
+
+# concurrent running of the services
+def concurrent_run(services):
+    start = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = []
+        
+        for host, port in services:
+            future = executor.submit(check_service,host,port)
+            futures.append(future)
+        results = []
+        for f in futures:
+            results.append(f.result())
+        
+    
+    total_time = time.perf_counter() - start
+    return results,total_time
+
+
 # for testing multiple services.
 services  = [("localhost", 8080),("google.com", 80), ("example.com", 443),("invalidhost", 1234)]
 
-for host, port in services:
-    result = check_service(host, port)
+
+
+sequential_results, sequential_time = sequential_run(services)
+
+concurrent_res, concurrent_time = concurrent_run(services)
+
+print("Sequential Results: ")
+for result in sequential_results:
     print(result)
+print(f"Sequential Time:{sequential_time:.2f}s")
+
+
+print("Concurrent Results:")
+for r in concurrent_res:
+    print(r)
+
+
+print(f"Concurrent Time: {concurrent_time:.2f}s")
+
+
+if concurrent_time > 0:
+    speed_up = round(sequential_time/concurrent_time,2)
+    print(f"Speed Up:{speed_up:.2f}x")
+
+
