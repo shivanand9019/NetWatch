@@ -1,6 +1,16 @@
 import socket
 import time
 from concurrent.futures import ThreadPoolExecutor
+import logging
+
+
+
+# loggin configuration
+logging.basicConfig(
+    filename="newtwork.log",
+    level=logging.INFO,
+    format="%(asctime)s  - %(levelname)s - %(message)s"
+)
 
 def check_service(host,port):
     
@@ -10,15 +20,21 @@ def check_service(host,port):
             end_time = time.perf_counter()
             
             latency = (end_time - start_time) * 1000  # convert to milliseconds
+        logging.info(logging.info(
+                f"Service {host}:{port} is REACHABLE "
+                f"(latency: {latency:.2f} ms)"
+            )
+        )
         return {
                 "host":host,
                 "port":port,
                 "status":"REACHABLE",
                 "latency_ms":round(latency,2)
            }
+
            
     except OSError as error:
-        
+        logging.warning(f"Service {host}:{port} is UNREACHABLE. Error :{error}")
         return {
             "host":host,
             "port":port,
@@ -85,3 +101,40 @@ if concurrent_time > 0:
     print(f"Speed Up:{speed_up:.2f}x")
 
 
+
+#   report generation function
+def generate_summary (results,elapsed_time):
+    
+    no_of_reach = 0;
+    no_of_unreach = 0
+    count = 0
+    latency = 0
+
+    
+    for result in results:
+        if(result['status'] == 'REACHABLE'):
+            latency+=result.get('latency_ms')
+            no_of_reach+=1
+        else:
+            no_of_unreach+=1
+    total_services= len(results)
+
+    average_latency = 0;
+    if no_of_reach>0:
+        average_latency = round(latency/no_of_reach,2)
+    else:
+        average_latency = 0;
+    
+    print("Total Services:",total_services)
+    print("Reachable Services:",no_of_reach)
+    print("Unreachable services:",no_of_unreach)
+    print("Average latency ",average_latency)
+    print("Total Execution Time:",round(elapsed_time,2),"s")
+print("For Concurrent Execution Summary:")
+print("--------------------------------------")
+generate_summary(concurrent_res,concurrent_time)
+print("---------------------------------------")
+print("For Sequential Execution Summary:")
+print("--------------------------------------")
+generate_summary(sequential_results,sequential_time)
+print("---------------------------------------")
