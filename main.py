@@ -73,68 +73,71 @@ def concurrent_run(services):
     return results,total_time
 
 
-# for testing multiple services.
-services  = [("localhost", 8080),("google.com", 80), ("example.com", 443),("invalidhost", 1234)]
 
 
-
-sequential_results, sequential_time = sequential_run(services)
-
-concurrent_res, concurrent_time = concurrent_run(services)
-
-print("Sequential Results: ")
-for result in sequential_results:
-    print(result)
-print(f"Sequential Time:{sequential_time:.2f}s")
-
-
-print("Concurrent Results:")
-for r in concurrent_res:
-    print(r)
-
-
-print(f"Concurrent Time: {concurrent_time:.2f}s")
-
-
-if concurrent_time > 0:
-    speed_up = round(sequential_time/concurrent_time,2)
-    print(f"Speed Up:{speed_up:.2f}x")
-
-
-
-#   report generation function
+    #   report generation function
 def generate_summary (results,elapsed_time):
     
-    no_of_reach = 0;
-    no_of_unreach = 0
-    count = 0
-    latency = 0
+        no_of_reach = 0;
+        no_of_unreach = 0
+        count = 0
+        latency = 0
 
     
-    for result in results:
-        if(result['status'] == 'REACHABLE'):
-            latency+=result.get('latency_ms')
-            no_of_reach+=1
-        else:
-            no_of_unreach+=1
-    total_services= len(results)
+        for result in results:
+            if(result['status'] == 'REACHABLE'):
+                latency+=result.get('latency_ms')
+                no_of_reach+=1
+            else:
+                no_of_unreach+=1
+        total_services= len(results)
 
-    average_latency = 0;
-    if no_of_reach>0:
-        average_latency = round(latency/no_of_reach,2)
-    else:
         average_latency = 0;
+        if no_of_reach>0:
+            average_latency = round(latency/no_of_reach,2)
+        else:
+            average_latency = 0;
     
-    print("Total Services:",total_services)
-    print("Reachable Services:",no_of_reach)
-    print("Unreachable services:",no_of_unreach)
-    print("Average latency ",average_latency)
-    print("Total Execution Time:",round(elapsed_time,2),"s")
-print("For Concurrent Execution Summary:")
-print("--------------------------------------")
-generate_summary(concurrent_res,concurrent_time)
-print("---------------------------------------")
-print("For Sequential Execution Summary:")
-print("--------------------------------------")
-generate_summary(sequential_results,sequential_time)
-print("---------------------------------------")
+        print(f"Total Services: {total_services}")
+        print(f"Reachable Services: {no_of_reach}")
+        print(f"Unreachable services: {no_of_unreach}")
+        print(f"Average latency: {average_latency}")
+        print(f"Total Execution Time: {round(elapsed_time, 2)}s")
+
+# for testing multiple services.
+if __name__ == "__main__":
+    services  = [("localhost", 8080),("google.com", 80), ("example.com", 443),("invalidhost", 1234)]
+
+
+
+    sequential_results, sequential_time = sequential_run(services)
+
+    concurrent_res, concurrent_time = concurrent_run(services)
+
+    print("Sequential Results: ")
+    for result in sequential_results:
+        print(result)
+    print(f"Sequential Time:{sequential_time:.2f}s")
+
+
+    print("Concurrent Results:")
+    for r in concurrent_res:
+        print(r)
+
+
+    print(f"Concurrent Time: {concurrent_time:.2f}s")
+
+
+    if concurrent_time > 0:
+        speed_up = round(sequential_time/concurrent_time,2)
+        print(f"Speed Up:{speed_up:.2f}x")
+
+
+    print("For Concurrent Execution Summary:")
+    print("--------------------------------------")
+    generate_summary(concurrent_res,concurrent_time)
+    print("---------------------------------------")
+    print("For Sequential Execution Summary:")
+    print("--------------------------------------")
+    generate_summary(sequential_results,sequential_time)
+    print("---------------------------------------")
